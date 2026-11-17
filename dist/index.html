@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APEX CAL // AI ECU Calibration Optimizer</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="carbon-bg">
+
+  <!-- TOP SPORT BAR -->
+  <header class="top-nav">
+    <div class="brand">
+      <div class="carbon-badge">
+        <span class="badge-accent">///</span>
+        <span class="brand-title">APEX CAL</span>
+        <span class="brand-sub">AI ECU OPTIMIZER</span>
+      </div>
+      <span class="tech-tag">FUEL ECONOMY // BSFC CALIBRATION</span>
+    </div>
+
+    <div class="status-cluster">
+      <div class="status-pill status-active">
+        <span class="pulse-dot"></span>
+        <span>SURROGATE ML: R² 0.993</span>
+      </div>
+      <div class="status-pill">
+        <span class="pill-label">GRID:</span>
+        <span class="pill-val">6x5 (30 CELLS)</span>
+      </div>
+      <div class="status-pill">
+        <span class="pill-label">STATUS:</span>
+        <span class="pill-val color-green">OPTIMIZED & SAFE</span>
+      </div>
+      <a href="fuel_economy_calibration.csv" download class="btn-sport btn-download">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        EXPORT CSV
+      </a>
+    </div>
+  </header>
+
+  <main class="dashboard-container">
+    
+    <!-- PERFORMANCE METRIC CARDS -->
+    <section class="kpi-grid">
+      <div class="kpi-card carbon-panel">
+        <div class="card-edge red-edge"></div>
+        <div class="kpi-header">
+          <span class="kpi-label">PEAK CRUISE MPG BOOST</span>
+          <span class="kpi-icon">⚡</span>
+        </div>
+        <div class="kpi-value color-green">+34.2<span class="unit">%</span></div>
+        <div class="kpi-footer">2500 RPM @ 0.20 Load (25.5% Fuel Cut)</div>
+      </div>
+
+      <div class="kpi-card carbon-panel">
+        <div class="card-edge cyan-edge"></div>
+        <div class="kpi-header">
+          <span class="kpi-label">HIGHWAY CRUISE ZONE AVG</span>
+          <span class="kpi-icon">⛽</span>
+        </div>
+        <div class="kpi-value color-cyan">+18.5<span class="unit">%</span></div>
+        <div class="kpi-footer">Lean-burn calibration (AFR ~15.5:1)</div>
+      </div>
+
+      <div class="kpi-card carbon-panel">
+        <div class="card-edge yellow-edge"></div>
+        <div class="kpi-header">
+          <span class="kpi-label">KNOCK SAFETY MARGIN</span>
+          <span class="kpi-icon">🛡️</span>
+        </div>
+        <div class="kpi-value color-yellow">≥ 1.0<span class="unit">° BTDC</span></div>
+        <div class="kpi-footer">100% of cells verified knock-free</div>
+      </div>
+
+      <div class="kpi-card carbon-panel">
+        <div class="card-edge green-edge"></div>
+        <div class="kpi-header">
+          <span class="kpi-label">DRIVABILITY FLOOR</span>
+          <span class="kpi-icon">🏁</span>
+        </div>
+        <div class="kpi-value color-green">100<span class="unit">% PASS</span></div>
+        <div class="kpi-footer">Target torque delivered at every cell</div>
+      </div>
+    </section>
+
+    <!-- CALIBRATION MAP EXPLORER & CELL TELEMETRY INSPECTOR -->
+    <section class="workspace-split">
+      
+      <!-- LEFT: INTERACTIVE CALIBRATION GRID -->
+      <div class="carbon-panel map-panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="stripe-accent"></span>
+            <h2>ECU CALIBRATION MATRIX EXPLORER</h2>
+          </div>
+          <div class="layer-selector">
+            <label>LAYER:</label>
+            <select id="layerSelect" class="sport-select">
+              <option value="savings">Fuel Savings (%) [MPG Gain]</option>
+              <option value="spark">Optimized Spark Advance (° BTDC)</option>
+              <option value="afr">Air-to-Fuel Ratio (AFR)</option>
+              <option value="torque">Delivered Torque (Nm)</option>
+              <option value="fuel_opt">Optimized Fuel Flow (g/s)</option>
+              <option value="fuel_base">Baseline Fuel Flow (g/s)</option>
+              <option value="knock">Knock Margin (°)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-legend">
+          <span id="legendMin">Min</span>
+          <div class="legend-bar" id="legendBar"></div>
+          <span id="legendMax">Max</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="calibration-grid-table" id="matrixTable">
+            <!-- Dynamically populated via app.js -->
+          </table>
+        </div>
+        <div class="grid-tip">💡 Click any cell to inspect detailed telemetry, knock bounds, and drivability torque floor.</div>
+      </div>
+
+      <!-- RIGHT: LIVE CELL TELEMETRY INSPECTOR -->
+      <div class="carbon-panel inspector-panel">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <span class="stripe-accent stripe-cyan"></span>
+            <h2>CELL TELEMETRY INSPECTOR</h2>
+          </div>
+          <div class="cell-coords-tag" id="inspectorCoords">RPM 2500 // LOAD 0.20</div>
+        </div>
+
+        <div class="inspector-body" id="inspectorBody">
+          <!-- Populated by app.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- REAL-TIME DYNO SIMULATOR & WHAT-IF TUNER -->
+    <section class="carbon-panel dyno-section">
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <span class="stripe-accent stripe-red"></span>
+          <h2>VIRTUAL DYNO & REAL-TIME "WHAT-IF" TUNER</h2>
+        </div>
+        <div class="dyno-status">REAL-TIME SURROGATE EVALUATOR</div>
+      </div>
+
+      <div class="dyno-grid">
+        <!-- CONTROLS -->
+        <div class="dyno-controls">
+          <div class="control-row">
+            <div class="control-label">
+              <span>ENGINE SPEED (RPM)</span>
+              <span class="slider-val" id="valRpm">2500 RPM</span>
+            </div>
+            <input type="range" id="sliderRpm" min="1200" max="6800" step="50" value="2500" class="sport-slider">
+          </div>
+
+          <div class="control-row">
+            <div class="control-label">
+              <span>ENGINE LOAD (MAP FRACTION)</span>
+              <span class="slider-val" id="valLoad">0.35</span>
+            </div>
+            <input type="range" id="sliderLoad" min="0.15" max="1.00" step="0.05" value="0.35" class="sport-slider">
+          </div>
+
+          <div class="control-row">
+            <div class="control-label">
+              <span>SPARK ADVANCE (° BTDC)</span>
+              <span class="slider-val" id="valSpark">22.0°</span>
+            </div>
+            <input type="range" id="sliderSpark" min="5.0" max="34.0" step="0.5" value="22.0" class="sport-slider">
+          </div>
+
+          <div class="control-row">
+            <div class="control-label">
+              <span>AIR-FUEL RATIO (AFR)</span>
+              <span class="slider-val" id="valAfr">15.2:1</span>
+            </div>
+            <input type="range" id="sliderAfr" min="11.5" max="16.5" step="0.1" value="15.2" class="sport-slider">
+          </div>
+
+          <div class="preset-buttons">
+            <button class="btn-preset" data-rpm="2500" data-load="0.25" data-spark="26.0" data-afr="15.8">Highway Cruise</button>
+            <button class="btn-preset" data-rpm="3500" data-load="0.60" data-spark="16.0" data-afr="14.2">Overtaking Mid-Load</button>
+            <button class="btn-preset" data-rpm="5500" data-load="1.00" data-spark="12.0" data-afr="12.2">Full WOT Sprint</button>
+          </div>
+        </div>
+
+        <!-- LIVE GAUGES & TELEMETRY -->
+        <div class="dyno-telemetry">
+          <div class="dyno-gauge-cluster">
+            
+            <div class="dyno-gauge-box">
+              <span class="gauge-title">BRAKE TORQUE</span>
+              <div class="gauge-dial-num" id="liveTorque">88.4</div>
+              <span class="gauge-unit">Newton-Meters</span>
+            </div>
+
+            <div class="dyno-gauge-box">
+              <span class="gauge-title">FUEL CONSUMPTION</span>
+              <div class="gauge-dial-num color-cyan" id="liveFuel">0.784</div>
+              <span class="gauge-unit">grams / second</span>
+            </div>
+
+            <div class="dyno-gauge-box">
+              <span class="gauge-title">CALCULATED BSFC</span>
+              <div class="gauge-dial-num color-yellow" id="liveBsfc">246</div>
+              <span class="gauge-unit">g / kWh</span>
+            </div>
+
+            <div class="dyno-gauge-box">
+              <span class="gauge-title">KNOCK STATUS</span>
+              <div class="gauge-dial-num" id="liveKnockTag">SAFE</div>
+              <span class="gauge-unit" id="liveKnockVal">+4.2° Margin</span>
+            </div>
+
+          </div>
+
+          <div class="dyno-alert-strip" id="dynoAlert">
+            STATUS: Combustion within safe efficiency and drivability boundaries.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GENERATED TELEMETRY HEATMAPS GALLERY -->
+    <section class="carbon-panel gallery-section">
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <span class="stripe-accent stripe-yellow"></span>
+          <h2>TELEMETRY HEATMAP VISUALIZATIONS</h2>
+        </div>
+        <div class="gallery-tabs">
+          <button class="tab-btn active" data-img="fuel_saving_heatmap.png">FUEL SAVINGS (%)</button>
+          <button class="tab-btn" data-img="spark_advance_map.png">SPARK ADVANCE</button>
+          <button class="tab-btn" data-img="afr_economy_map.png">AFR TARGETS</button>
+          <button class="tab-btn" data-img="torque_drivability_check.png">DRIVABILITY CHECK</button>
+        </div>
+      </div>
+
+      <div class="heatmap-viewer">
+        <img id="activeHeatmap" src="fuel_saving_heatmap.png" alt="ECU Calibration Heatmap">
+        <div class="heatmap-caption" id="heatmapCaption">
+          Optimized Fuel Savings (% Reduction) across RPM x Load showing up to +34.2% MPG improvements in cruise cells.
+        </div>
+      </div>
+    </section>
+
+    <!-- CALIBRATION DATA TABLE -->
+    <section class="carbon-panel table-section">
+      <div class="panel-header">
+        <div class="panel-title-wrap">
+          <span class="stripe-accent"></span>
+          <h2>FULL CALIBRATION EXPORT TABLE</h2>
+        </div>
+        <input type="text" id="tableFilter" placeholder="Filter RPM or Load..." class="sport-input">
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table" id="dataTable">
+          <thead>
+            <tr>
+              <th>RPM</th>
+              <th>LOAD</th>
+              <th>BASE FUEL (g/s)</th>
+              <th>OPT FUEL (g/s)</th>
+              <th>SAVED %</th>
+              <th>MPG BOOST</th>
+              <th>SPARK (°BTDC)</th>
+              <th>AFR</th>
+              <th>TORQUE (Nm)</th>
+              <th>FLOOR (Nm)</th>
+              <th>KNOCK MARGIN</th>
+            </tr>
+          </thead>
+          <tbody id="dataTableBody">
+            <!-- Populated via app.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- CARBON FOOTER -->
+  <footer class="footer-carbon">
+    <div class="footer-wrap">
+      <div class="footer-left">
+        <span class="badge-accent">///</span>
+        <span>APEX CAL // AI ENGINE CALIBRATION LAB</span>
+        <span class="sep">•</span>
+        <span>DEEP OPTIMIZATION & SURROGATE MODELING</span>
+      </div>
+      <div class="footer-right">
+        <span>READY FOR NETLIFY DEPLOYMENT</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
